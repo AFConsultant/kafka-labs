@@ -16,6 +16,10 @@ kafka-console-producer() {
 kafka-console-consumer() {
   docker exec -it kafka /opt/kafka/bin/kafka-console-consumer.sh "\$@"
 }
+
+kafka-consumer-groups() {
+  docker exec -it kafka /opt/kafka/bin/kafka-consumer-groups.sh "\$@"
+}
 EOF
 )
 
