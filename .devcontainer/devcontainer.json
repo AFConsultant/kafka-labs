@@ -1,17 +1,25 @@
 {
-    "name": "Kafka Development Environment",
-    "image": "mcr.microsoft.com/devcontainers/java:21",
-    "features": {
-      "ghcr.io/devcontainers/features/java:1": {
-        "version": "21",
-        "installMaven": "true",
-        "installGradle": "true"
-      },
-      "ghcr.io/devcontainers/features/docker-in-docker:1": {}
+  "name": "Kafka Development Environment",
+  "image": "mcr.microsoft.com/devcontainers/java:21",
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "21",
+      "installMaven": "true",
+      "installGradle": "true"
     },
-    "hostRequirements": {
-        "cpus": 8,
-        "memory": "16gb",
-        "storage": "32gb"
+    "ghcr.io/devcontainers/features/docker-in-docker:1": {},
+    "ghcr.io/devcontainers/features/dotnet:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csdevkit"
+      ]
     }
+  },
+  "hostRequirements": {
+    "cpus": 8,
+    "memory": "16gb",
+    "storage": "32gb"
   }
+}
