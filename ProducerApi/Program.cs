@@ -1,12 +1,9 @@
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -14,28 +11,36 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+const string filePath = "/workspaces/kafka-labs/data/201306-citibike-tripdata_1_6K.csv";
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
+app.MapPost("/trip", async () => {
+    
+    if (!File.Exists(filePath))
+    {
+        return Results.NotFound($"Le fichier n'a pas été trouvé à l'emplacement : {filePath}");
+    }
+
+    _ = Task.Run(async () => {
+        try
+        {
+            Console.WriteLine("--- Démarrage de la lecture du fichier de trajets ---");
+            
+            await foreach (var line in File.ReadLinesAsync(filePath))
+            {
+                Console.WriteLine(line);
+                await Task.Delay(1000);
+            }
+            
+            Console.WriteLine("--- Fin de la lecture du fichier ---");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Une erreur est survenue lors de la lecture du fichier : {ex.Message}");
+        }
+    });
+    return Results.Accepted(value: "La lecture du fichier a démarré en arrière-plan.");
 })
-.WithName("GetWeatherForecast");
+.WithName("PostTripData")
+.WithOpenApi();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

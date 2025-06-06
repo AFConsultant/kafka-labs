@@ -10,11 +10,11 @@ kafka-topics() {
 }
 
 kafka-console-producer() {
-  docker exec -it kafka kafka-console-producer "\$@"
+  docker exec -it kafka /opt/kafka/bin/kafka-console-producer.sh "\$@"
 }
 
 kafka-console-consumer() {
-  docker exec -it kafka kafka-console-consumer "\$@"
+  docker exec -it kafka /opt/kafka/bin/kafka-console-consumer.sh "\$@"
 }
 EOF
 )
