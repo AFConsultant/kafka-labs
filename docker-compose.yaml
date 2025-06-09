@@ -40,6 +40,9 @@ services:
               connect:
                 - name: connect
                   url: "http://connect:8083"
+              ksqldb:
+                - name: ksqldb
+                  url: "http://ksqldb:8088"
     ports:
       - 8085:8080
     depends_on:
