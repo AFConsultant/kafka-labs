@@ -28,8 +28,14 @@ app.MapPost("/trip", ([FromServices] IProducer<Null, string> producer) => {
     _ = Task.Run(async () => {
         try
         {            
+            bool firstLine = true;
             await foreach (var line in File.ReadLinesAsync(filePath))
             {
+                if (firstLine)
+                {
+                    firstLine = false;
+                    continue;
+                }
                 var message = new Message<Null, string> { Value = line };
                 try
                 {
