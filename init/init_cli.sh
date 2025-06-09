@@ -20,6 +20,10 @@ kafka-console-consumer() {
 kafka-consumer-groups() {
   docker exec -it kafka /opt/kafka/bin/kafka-consumer-groups.sh "\$@"
 }
+
+ksql() {
+  docker exec -it ksqldb ksql "\$@"
+}
 EOF
 )
 
