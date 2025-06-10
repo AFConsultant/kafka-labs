@@ -114,11 +114,12 @@ For this, we can use `kcat`.
 ```sh
 tail -n +2 ./data/stations.csv | awk -F',' '{print $1 "\t" $0}' | kcat -b kafka:9092 -t station_infos_raw_csv -P -K $'\t' -X partitioner=murmur2_random
 ```
-Check the data is properly loaded. First, print the topic content in ksqlDB.
+Check the data is properly loaded. 
 ```sql
+SET 'auto.offset.reset'='earliest';
 PRINT station_infos_raw_csv LIMIT 5;
 ```
-Now, create a stream based on this data using the delimiter formatter.
+Create a stream based on this data using the delimiter formatter.
 ``` sql
 CREATE TABLE station_details (
     station_id VARCHAR PRIMARY KEY,
@@ -205,7 +206,8 @@ Create the table with the tumbling window.
 ```sql
 CREATE TABLE neighborhood_departures_count 
 AS SELECT 
-    "StartStationNeighborhood" AS neighborhood,
+    "StartStationNeighborhood",
+    AS_VALUE("StartStationNeighborhood") AS neighborhood,
     FROM_UNIXTIME(WINDOWSTART) AS window_start,
     FROM_UNIXTIME(WINDOWEND) AS window_end,
     COUNT(*) AS departures_count
@@ -213,4 +215,46 @@ FROM trips_enriched
 WINDOW HOPPING (SIZE 1 HOUR, ADVANCE BY 5 MINUTES)
 GROUP BY "StartStationNeighborhood"
 EMIT CHANGES;
+```
+
+## Send the data to Postgres using a connector
+
+```sql
+CREATE SINK CONNECTOR jdbc_sink_postgres_departures_01 WITH (
+    'connector.class' = 'io.confluent.connect.jdbc.JdbcSinkConnector',
+    'connection.url' = 'jdbc:postgresql://postgres:5432/',
+    'connection.user' = 'postgres',                          
+    'connection.password' = 'postgres',                      
+    'topics' = 'NEIGHBORHOOD_DEPARTURES_COUNT',              
+    'table.name.format' = 'neighborhood_departures_count',   
+    'input.data.format' = 'AVRO',                            
+    'key.converter' = 'org.apache.kafka.connect.storage.StringConverter',
+    'value.converter' = 'io.confluent.connect.avro.AvroConverter',
+    'value.converter.schema.registry.url' = 'http://schema-registry:8081',
+    'pk.mode' = 'record_value',
+    'pk.fields' = 'NEIGHBORHOOD,WINDOW_START',
+    'insert.mode' = 'upsert',
+    'auto.create' = 'true',
+    'auto.evolve' = 'true',
+    'db.timezone' = 'UTC'
+);
+```
+Check the logs to see if there are any error in connect.
+```sh
+docker logs -f connect
+```
+Explore the resulting data in the postgres database.
+```sh
+docker exec -it postgres psql -U postgres -d postgres
+```
+Check the results:
+```sql
+SELECT "NEIGHBORHOOD",
+       "WINDOW_START",
+       "WINDOW_END",
+       "DEPARTURES_COUNT"
+FROM public.neighborhood_departures_count
+WHERE "WINDOW_START" = '2013-06-01 10:00:00'
+ORDER BY "DEPARTURES_COUNT" DESC
+LIMIT 5;
 ```
