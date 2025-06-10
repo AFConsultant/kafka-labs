@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using CsvHelper.Configuration.Attributes;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using Confluent.Kafka;
@@ -7,7 +6,6 @@ using Confluent.Kafka.SyncOverAsync;
 using Confluent.SchemaRegistry;
 using Confluent.SchemaRegistry.Serdes;
 using com.citibike;
-using CsvIndex = CsvHelper.Configuration.Attributes.IndexAttribute;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +13,7 @@ var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfil
 var dbPath = Path.Combine(userProfile, "citibike.db");
 
 // The database file will be created at /home/vscode/citibike.db
-builder.Services.AddDbContext<TripDbContext>(options => 
+builder.Services.AddDbContext<TripDbContext>(options =>
     options.UseSqlite($"Data Source={dbPath}"));
 
 builder.Services.AddHostedService<KafkaConsumerService>();
@@ -136,53 +134,37 @@ public class KafkaConsumerService : BackgroundService
 
 public class CitiBikeTripDao
 {
-    [CsvIndex(0)]
     public int TripDuration { get; set; }
 
-    [CsvIndex(1)]
     public DateTime StartTime { get; set; }
 
-    [CsvIndex(2)]
     public DateTime StopTime { get; set; }
 
-    [CsvIndex(3)]
     public int StartStationId { get; set; }
 
-    [CsvIndex(4)]
     public string? StartStationName { get; set; }
 
-    [CsvIndex(5)]
     public double StartStationLatitude { get; set; }
 
-    [CsvIndex(6)]
     public double StartStationLongitude { get; set; }
 
-    [CsvIndex(7)]
     public int? EndStationId { get; set; }
 
-    [CsvIndex(8)]
     public string? EndStationName { get; set; }
 
-    [CsvIndex(9)]
     public double? EndStationLatitude { get; set; }
 
-    [CsvIndex(10)]
     public double? EndStationLongitude { get; set; }
 
-    [CsvIndex(11)]
     public int BikeId { get; set; }
 
-    [CsvIndex(12)]
     public string? UserType { get; set; }
 
-    [CsvIndex(13)]
     public string? BirthYear { get; set; }
 
-    [CsvIndex(14)]
     public int Gender { get; set; }
 
     [Key]
-    [Ignore]
     public int Id { get; set; }
 
     public static CitiBikeTripDao fromAvroMessage(CitiBikeTrip citiBikeTrip)
@@ -202,7 +184,7 @@ public class CitiBikeTripDao
         citiBikeTripDao.UserType = citiBikeTrip.UserType;
         citiBikeTripDao.BirthYear = citiBikeTrip.BirthYear;
         citiBikeTripDao.Gender = citiBikeTrip.Gender;
-        
+
         return citiBikeTripDao;
     }
 }
