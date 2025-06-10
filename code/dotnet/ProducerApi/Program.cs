@@ -43,8 +43,7 @@ var app = builder.Build();
 app.UseHttpsRedirection();
 
 const string filePath = "/workspaces/kafka-labs/data/201306-citibike-tripdata_1_6K.csv";
-const string rawCsvTopicName = "bike_trips_raw_csv";
-const string avroTopicName = "bike_trips";
+const string topicName = "bike_trips";
 
 app.MapPost("/trip", ([FromServices] IProducer<Null, CitiBikeTrip> producer) =>
 {
@@ -66,7 +65,7 @@ app.MapPost("/trip", ([FromServices] IProducer<Null, CitiBikeTrip> producer) =>
                     firstLine = false;
                     continue;
                 }
-                await SendAvroMessage(producer, line, avroTopicName);
+                await SendAvroMessage(producer, line);
                 await Task.Delay(1000);
             }
         }
@@ -78,22 +77,8 @@ app.MapPost("/trip", ([FromServices] IProducer<Null, CitiBikeTrip> producer) =>
     return Results.Accepted();
 });
 
-async Task SendRawMessage(IProducer<Null, string> producer, string line, string topicName)
-{
-    var message = new Message<Null, string> { Value = line };
-    try
-    {
-        await producer.ProduceAsync(topicName, message);
-        Console.WriteLine($"Ligne envoyée à Kafka : {line}");
-    }
-    catch (ProduceException<Null, string> e)
-    {
-        Console.WriteLine($"Échec de l'envoi du message : {message.Value} | Raison : {e.Error.Reason}");
-    }
-}
 
-
-async Task SendAvroMessage(IProducer<Null, CitiBikeTrip> producer, string line, string topicName)
+async Task SendAvroMessage(IProducer<Null, CitiBikeTrip> producer, string line)
 {
     var citibike = ParseCsvLine(line);
     var message = new Message<Null, CitiBikeTrip> { Value = citibike };

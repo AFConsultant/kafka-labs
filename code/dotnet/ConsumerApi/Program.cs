@@ -1,11 +1,12 @@
 using Microsoft.EntityFrameworkCore;
-using System.Globalization;
-using CsvHelper;
-using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using Confluent.Kafka;
+using Confluent.Kafka.SyncOverAsync;
+using Confluent.SchemaRegistry;
+using Confluent.SchemaRegistry.Serdes;
+using com.citibike;
 using CsvIndex = CsvHelper.Configuration.Attributes.IndexAttribute;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -82,9 +83,17 @@ public class KafkaConsumerService : BackgroundService
             AutoOffsetReset = AutoOffsetReset.Earliest,
         };
 
-        const string topic = "bike_trips_raw_csv";
+        var schemaRegistryConfig = new SchemaRegistryConfig
+        {
+            Url = "http://schema-registry:8081"
+        };
+        const string topic = "bike_trips";
 
-        using var consumer = new ConsumerBuilder<Ignore, string>(config).Build();
+        using var schemaRegistry = new CachedSchemaRegistryClient(schemaRegistryConfig);
+        var avroDeserializer = new AvroDeserializer<CitiBikeTrip>(schemaRegistry).AsSyncOverAsync();
+        using var consumer = new ConsumerBuilder<Ignore, CitiBikeTrip>(config)
+            .SetValueDeserializer(avroDeserializer)
+            .Build();
         consumer.Subscribe(topic);
         _logger.LogInformation("Kafka Consumer started. Subscribed to '{Topic}' topic.", topic);
 
@@ -95,11 +104,7 @@ public class KafkaConsumerService : BackgroundService
                 try
                 {
                     var consumeResult = consumer.Consume(stoppingToken);
-                    var csvLine = consumeResult.Message.Value;
-                    
-                    if (string.IsNullOrWhiteSpace(csvLine)) continue;
-
-                    await ProcessCsvLine(csvLine);
+                    await ProcessRecord(consumeResult.Message.Value);
                 }
                 catch (ConsumeException e)
                 {
@@ -117,44 +122,19 @@ public class KafkaConsumerService : BackgroundService
         }
     }
 
-    private async Task ProcessCsvLine(string csvLine)
+    private async Task ProcessRecord(CitiBikeTrip citiBikeTrip)
     {
         using var scope = _scopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<TripDbContext>();
 
-        var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-        {
-            HasHeaderRecord = false,
-        };
-
-        try
-        {
-            using var reader = new StringReader(csvLine);
-            using var csv = new CsvReader(reader, config);
-
-            var numberStyle = System.Globalization.NumberStyles.Float;
-            csv.Context.TypeConverterOptionsCache.GetOptions<int?>().NumberStyles = numberStyle;
-            csv.Context.TypeConverterOptionsCache.GetOptions<int>().NumberStyles = numberStyle;
-
-            if (csv.Read())
-            {
-                var record = csv.GetRecord<CitiBikeTrip>();
-                if (record != null)
-                {
-                    dbContext.Trips.Add(record);
-                    await dbContext.SaveChangesAsync();
-                    _logger.LogInformation($"Successfully processed and saved trip with BikeId: {record.BikeId}");
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"Failed to process CSV line: \"{csvLine}\"");
-        }
+        CitiBikeTripDao dao = CitiBikeTripDao.fromAvroMessage(citiBikeTrip);
+        dbContext.Trips.Add(dao);
+        await dbContext.SaveChangesAsync();
+        _logger.LogInformation($"Successfully processed and saved trip with id: {dao.Id}");
     }
 }
 
-public class CitiBikeTrip
+public class CitiBikeTripDao
 {
     [CsvIndex(0)]
     public int TripDuration { get; set; }
@@ -204,6 +184,27 @@ public class CitiBikeTrip
     [Key]
     [Ignore]
     public int Id { get; set; }
+
+    public static CitiBikeTripDao fromAvroMessage(CitiBikeTrip citiBikeTrip)
+    {
+        CitiBikeTripDao citiBikeTripDao = new CitiBikeTripDao();
+        citiBikeTripDao.TripDuration = citiBikeTrip.TripDuration;
+        citiBikeTripDao.StartTime = citiBikeTrip.StartTime;
+        citiBikeTripDao.StopTime = citiBikeTrip.StopTime;
+        citiBikeTripDao.StartStationId = citiBikeTrip.StartStationId;
+        citiBikeTripDao.StartStationName = citiBikeTrip.StartStationName;
+        citiBikeTripDao.StartStationLatitude = citiBikeTrip.StartStationLatitude;
+        citiBikeTripDao.EndStationId = citiBikeTrip.EndStationId;
+        citiBikeTripDao.EndStationName = citiBikeTrip.EndStationName;
+        citiBikeTripDao.EndStationLatitude = citiBikeTrip.EndStationLatitude;
+        citiBikeTripDao.EndStationLongitude = citiBikeTrip.EndStationLongitude;
+        citiBikeTripDao.BikeId = citiBikeTrip.BikeId;
+        citiBikeTripDao.UserType = citiBikeTrip.UserType;
+        citiBikeTripDao.BirthYear = citiBikeTrip.BirthYear;
+        citiBikeTripDao.Gender = citiBikeTrip.Gender;
+        
+        return citiBikeTripDao;
+    }
 }
 
 
@@ -218,6 +219,6 @@ public class TripDbContext : DbContext
     public TripDbContext(DbContextOptions<TripDbContext> options) : base(options) { }
 
     // Represents the "Trips" table in the database.
-    // Each row in the table will correspond to a CitiBikeTrip object.
-    public DbSet<CitiBikeTrip> Trips { get; set; }
+    // Each row in the table will correspond to a CitiBikeTripDao object.
+    public DbSet<CitiBikeTripDao> Trips { get; set; }
 }
