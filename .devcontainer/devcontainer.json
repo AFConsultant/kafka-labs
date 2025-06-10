@@ -15,6 +15,7 @@
     "vscode": {
       "extensions": [
         "ms-dotnettools.csdevkit",
+        "ms-ossdata.vscode-pgsql",
         "alexcvzz.vscode-sqlite"
       ]
     }
