@@ -55,6 +55,7 @@ services:
     command: >
       bash -c 'echo Creating topics... ;
       /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --topic bike_trips_raw_csv --partitions 3 --replication-factor 1 ;
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --topic bike_trips --partitions 3 --replication-factor 1 ;
       /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --topic station_infos_raw_csv --partitions 3 --replication-factor 1 --config cleanup.policy=compact ;
       true'
     depends_on:
