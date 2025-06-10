@@ -12,7 +12,7 @@
 
   <Target Name="GenerateAvro" BeforeTargets="BeforeBuild">
     <Message Text="Generating C# classes from Avro schema..." Importance="high" />
-    <Exec Command="avrogen -s AvroSchemas/CitiBikeTrip.avsc Generated" />
+    <Exec Command="dotnet avrogen -s AvroSchemas/CitiBikeTrip.avsc Generated" />
   </Target>
 
 </Project>
