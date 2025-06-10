@@ -18,10 +18,5 @@
         "alexcvzz.vscode-sqlite"
       ]
     }
-  },
-  "hostRequirements": {
-    "cpus": 8,
-    "memory": "16gb",
-    "storage": "32gb"
   }
 }
