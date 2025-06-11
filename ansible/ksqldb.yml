@@ -1,0 +1,15 @@
+---
+- name: Run ksqlDB queries
+  hosts: localhost
+  become: no
+  
+  tasks:
+    - name: Create the 'trips' stream in ksqlDB from a file
+      ansible.builtin.shell:
+        cmd: echo "{{ lookup('file', 'queries/create_trips_stream.sql') }}" | docker exec -i ksqldb ksql http://localhost:8088
+      register: ksql_result
+      until: ksql_result.rc == 0
+      retries: 10
+      delay: 6
+      changed_when: "'Stream created' in ksql_result.stdout"
+
