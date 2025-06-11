@@ -40,16 +40,7 @@
       delay: 6
       changed_when: "'Stream created' in ksql_result.stdout"
 
-    - name: Create the 'create_neighborhood_departures_count_table' stream
-      ansible.builtin.shell:
-        cmd: echo "{{ lookup('file', 'queries/create_neighborhood_departures_count_table.sql') }}" | docker exec -i ksqldb ksql http://localhost:8088
-      register: ksql_result
-      until: ksql_result.rc == 0
-      retries: 10
-      delay: 6
-      changed_when: "'Stream created' in ksql_result.stdout"
-
-    - name: Create the 'create_neighborhood_departures_count_table' stream
+    - name: Create the 'create_neighborhood_departures_count_table' table
       ansible.builtin.shell:
         cmd: echo "{{ lookup('file', 'queries/create_neighborhood_departures_count_table.sql') }}" | docker exec -i ksqldb ksql http://localhost:8088
       register: ksql_result
