@@ -4,9 +4,27 @@
   become: no
   
   tasks:
-    - name: Create the 'trips' stream in ksqlDB from a file
+    - name: Create the 'trips' stream
       ansible.builtin.shell:
         cmd: echo "{{ lookup('file', 'queries/create_trips_stream.sql') }}" | docker exec -i ksqldb ksql http://localhost:8088
+      register: ksql_result
+      until: ksql_result.rc == 0
+      retries: 10
+      delay: 6
+      changed_when: "'Stream created' in ksql_result.stdout"
+
+    - name: Create the 'station_details' table
+      ansible.builtin.shell:
+        cmd: echo "{{ lookup('file', 'queries/create_station_details_table.sql') }}" | docker exec -i ksqldb ksql http://localhost:8088
+      register: ksql_result
+      until: ksql_result.rc == 0
+      retries: 10
+      delay: 6
+      changed_when: "'Table created' in ksql_result.stdout"
+
+    - name: Create the 'create_trips_by_station_stream.sql' stream
+      ansible.builtin.shell:
+        cmd: echo "{{ lookup('file', 'queries/create_trips_by_station_stream.sql') }}" | docker exec -i ksqldb ksql http://localhost:8088
       register: ksql_result
       until: ksql_result.rc == 0
       retries: 10

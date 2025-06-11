@@ -1,4 +1,4 @@
-CREATE STREAM IF NOT EXISTS trips (
+CREATE STREAM trips (
   "TripDuration" INT,
   "StartTime" BIGINT,
   "StopTime" BIGINT,
