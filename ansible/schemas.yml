@@ -10,3 +10,7 @@
         chdir: /workspaces/kafka-labs/code/dotnet/Shared.Contracts
       args:
         executable: /bin/bash
+      register: registry_result
+      until: registry_result.rc == 0
+      retries: 10
+      delay: 6
