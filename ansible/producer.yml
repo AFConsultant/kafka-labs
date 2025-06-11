@@ -29,3 +29,13 @@
           - /workspaces/kafka-labs/data:/data
         networks:
           - name: kafka-labs_default
+
+    - name: Trigger the /trip endpoint to start data production
+      ansible.builtin.uri:
+        url: http://localhost:8080/trip
+        method: POST
+        status_code: [200, 202]
+      register: trip_endpoint_result
+      until: trip_endpoint_result.status != -1
+      retries: 12
+      delay: 5
