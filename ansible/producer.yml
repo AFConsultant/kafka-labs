@@ -1,0 +1,31 @@
+---
+- name: Build and run Producer API
+  hosts: localhost
+  become: no
+
+  tasks:
+    - name: Build the producer-api image from its Dockerfile
+      community.docker.docker_image:
+        name: producer-api
+        build:
+          path: /workspaces/kafka-labs/code/dotnet
+          dockerfile: ProducerApi.Dockerfile
+        source: build
+
+    - name: Run the producer-api container
+      community.docker.docker_container:
+        name: producer-api
+        image: producer-api
+        state: started
+        recreate: yes
+        detach: yes
+        ports:
+          - "8080:8080"
+        env:
+          CSV_FILE_PATH: "/data/201306-citibike-tripdata_1_6K.csv"
+          SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+          KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+        volumes:
+          - /workspaces/kafka-labs/data:/data
+        networks:
+          - name: kafka-labs_default
