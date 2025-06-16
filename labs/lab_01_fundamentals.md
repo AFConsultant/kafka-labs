@@ -21,7 +21,7 @@ The `Citi Bike` dataset refers to the public, openly available data released b
 
 We will use publicly data released in 2013 regrading bike trips.
 
-Check out [dataset](/data/201306-citibike-tripdata_1_6K.csv).
+Check out the [dataset](/data/201306-citibike-tripdata_1_6K.csv).
 
 This represents bike trips, from one station to another.
 
