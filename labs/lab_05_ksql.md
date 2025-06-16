@@ -1,38 +1,3 @@
-# Preparation
-
-## Configure /etc/host
-```sh
-sudo ./init/init_network.sh
-```
-
-## Configure CLI
-```sh
-./init/init_cli.sh
-source ~/.bashrc
-```
-
-## Create the Avro Schema
-```sh
-cd ./code/dotnet/Shared.Contracts
-./publishSchema.sh
-```
-The Schema Registry should return something like this: `{"id":1}`.
-Check the `CitiBikeTrip` schema is properly registered in `AKHQ` under the subject `bike_trips-value`.
-
-## Send the bike trip data
-```sh
-cd code/dotnet
-dotnet tool restore
-dotnet build
-cd ProducerApi
-dotnet run
-
-# In another script, send data
-curl -XPOST http://localhost:5032/trip
-```
-The `bike_trips` topic should receive messages.
-Check them using `AKHQ`.
-
 # ksqlDB
 ## Connect to ksqlDB
 ```sh
