@@ -136,7 +136,7 @@ Use Apache Avro Tools:
 
 ```sh
 dotnet tool install --global Apache.Avro.Tools
-dotnet avrogen -s CitiBikeTrip.avsc Generated
+avrogen -s CitiBikeTrip.avsc Generated
 ```
 
 This will generate sources inside the `Generated` folder.
