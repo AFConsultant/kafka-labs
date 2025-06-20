@@ -115,7 +115,7 @@ Is something missing for the co-partitionning to work ?
 ### Add a key to the trips data
 
 Derive a stream `trips_by_station`, which uses `trips` but adds a key.
-What type will be the key of the stream ? Will it work with our` station_details` key ? What would we need to do ?
+What type will be the key of the stream ? Will it work with our `station_details` key ? What would we need to do ?
 ```sql
 CREATE STREAM trips_by_station
   WITH (KAFKA_TOPIC='bike_trips_by_station', VALUE_FORMAT='AVRO')
