@@ -129,7 +129,7 @@ PRINT bike_trips_by_station LIMIT 5;
 ```
 
 ### Implement the join
-Implement the join between `trips_by_station` and `station_details`. The resulting stream should be `trips_enriched` and contain eveything from the trip plus the starting. A type cast is required here.
+Implement the join between `trips_by_station` and `station_details`. The resulting stream should be `trips_enriched` and contain eveything from the trip plus the starting station. A type cast is required here.
 
 Also, because it is a join, the join key needs to be in the select.
 ```sql
